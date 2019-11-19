@@ -18,7 +18,7 @@ typedef struct farmacia{
 }Farmacia;
 //************************************************************************************************************************************************************************************************************
 int cadastrar(Farmacia f){
-    FILE *arquivo = fopen("Farmacia.txt","a+");
+    FILE *arquivo = fopen("Farmacia.txt","a+b");
     if(arquivo == NULL){
         printf("Falha ao abrir o arquivo!\n");
         exit(1);
@@ -29,9 +29,11 @@ int cadastrar(Farmacia f){
 }
 //************************************************************************************************************************************************************************************************************
 void buscar(int codigo){
-    FILE *arquivo = fopen("Farmacia.txt","rb");
+    FILE *arquivo = fopen("Farmacia.txt","r+");
     Farmacia f;
+
     int vamos_encontrar = 0;
+
     if(arquivo == NULL){
         printf("Falha ao abrir arquivo!!!\n");
         system("pause");
@@ -47,6 +49,8 @@ void buscar(int codigo){
     if(vamos_encontrar){
         if(f.status == '*'){
             printf("Esse registro ja foi apagado!!\n\n");
+            system("pause");
+            system("cls");
             return;
         }else{
             printf("***********************************\n");
@@ -65,8 +69,9 @@ void buscar(int codigo){
 }
 //************************************************************************************************************************************************************************************************************
 void listar(){
-    FILE *arquivo = fopen("Farmacia.txt","rb");
+    FILE *arquivo = fopen("Farmacia.txt","r+");
     Farmacia f;
+    int encontrando_cadastros = 0;
 
     if(arquivo == NULL){
         printf("Falha ao abrir arquivo!!!\n");
@@ -75,15 +80,16 @@ void listar(){
         return;
     }
     system("cls");
+
     printf("Remedios cadastrados\n\n");
+
     while(fread(&f, sizeof(Farmacia), 1, arquivo)){
-        if(f.status == '*'){
-            return;
-        }else{
+        if(f.status != '*'&& f.cod != -100){
             printf("***********************************\n");
             printf("* Codigo: %d\n* Nome do remedio: %s\n",f.cod,f.nome_remedio);
             printf("* Quantidade em estoque: %d\n* Preco: %.2f\n",f.quant_estoque,f.preco);
             printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
+            printf("* Status: %c\n", f.status);
         }
     }
     printf("\n\n");
@@ -93,8 +99,10 @@ void listar(){
 }
 //************************************************************************************************************************************************************************************************************
 int alterar(Farmacia f,int codigo){
-    FILE *arquivo = fopen("Farmacia.txt","a+b");
+    FILE *arquivo = fopen("Farmacia.txt","r+b");
+
     int vamos_encontrar = 0;
+
     if(arquivo == NULL){
         printf("Falha ao abrir arquivo!!!\n");
         system("pause");
@@ -103,6 +111,8 @@ int alterar(Farmacia f,int codigo){
     }
     if(f.status == '*'){
         printf("Esse registro já foi apagado!!!\n\n");
+        system("pause");
+        system("cls");
         return;
     }
     while(fread(&f, sizeof(Farmacia), 1, arquivo)){
@@ -118,15 +128,13 @@ int alterar(Farmacia f,int codigo){
         printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
         printf("* Status: %c\n", f.status);
         printf("***********************************\n\n");
+
         printf("Novo cadastro\n\n");
+
         f.status = ' ';
         printf("Codigo: ");
         scanf("%d",&f.cod);
-        while(verificar_codigo(f.cod) == 1){
-            printf("Informe outro codigo!!!\n\n");
-            printf("Codigo: ");
-            scanf("%d",&f.cod);
-        }
+
         fflush(stdin);
         printf("Nome do remedio: ");
         fgets(f.nome_remedio,100, stdin);
@@ -155,28 +163,32 @@ int alterar(Farmacia f,int codigo){
             system("pause");
             system("cls");
         }
-        fseek(arquivo, -(long) sizeof(Farmacia), SEEK_CUR);
-        fwrite(&f, sizeof(Farmacia), 1, arquivo);
-        fflush(arquivo);
+
     }else{
         printf("Codigo nao encontrado!!!\n\n");
         system("pause");
         system("cls");
     }
+    fwrite(&f, sizeof(Farmacia), 1, arquivo);
+    fflush(arquivo);
     fclose(arquivo);
 }
 //************************************************************************************************************************************************************************************************************
 int deletar(Farmacia f,int codigo){
-    FILE *arquivo = fopen("Farmacia.txt","a+b");
+       FILE *arquivo = fopen("Farmacia.txt","r+b");
+
     int vamos_encontrar = 0;
-    char resposta;
+
     if(arquivo == NULL){
         printf("Falha ao abrir arquivo!!!\n");
         system("pause");
         system("cls");
         return;
-    }if(f.status == '*'){
+    }
+    if(f.status == '*'){
         printf("Esse registro já foi apagado!!!\n\n");
+        system("pause");
+        system("cls");
         return;
     }
     while(fread(&f, sizeof(Farmacia), 1, arquivo)){
@@ -192,18 +204,24 @@ int deletar(Farmacia f,int codigo){
         printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
         printf("* Status: %c\n", f.status);
         printf("***********************************\n\n");
-        fseek(arquivo, - (long) sizeof(Farmacia), SEEK_CUR);
+
         f.status = '*';
-        fwrite(&f, sizeof(Farmacia), 1, arquivo);
+        f.cod = -100;
+
+        printf("Dados atuais do cadastro\n");
+        printf("* Status: %c\n", f.status);
         printf("Apagando registro!\n");
-        fflush(arquivo);
         system("pause");
         system("cls");
+
     }else{
         printf("Codigo nao encontrado!!!\n\n");
         system("pause");
         system("cls");
     }
+    fseek(arquivo, -(long) sizeof(Farmacia), SEEK_CUR);
+    fwrite(&f, sizeof(Farmacia), 1, arquivo);
+    fflush(arquivo);
     fclose(arquivo);
 }
 //************************************************************************************************************************************************************************************************************
@@ -225,7 +243,7 @@ void apagar_tudo(){
 }
 //************************************************************************************************************************************************************************************************************
 int verificar_codigo(int codigo){
-    FILE *arquivo = fopen("Farmacia.txt","rb");
+    FILE *arquivo = fopen("Farmacia.txt","r+b");
     Farmacia f;
     int codigo_ja_digitado = 0;
 
@@ -243,7 +261,6 @@ int verificar_codigo(int codigo){
 int main(){
     int op = -1;
     int codigo = 0;
-    int verificador = 0;
     Farmacia f;
     do{
         printf("Drogaria do Carrara\n");
