@@ -29,7 +29,7 @@ int cadastrar(Farmacia f){
 }
 //************************************************************************************************************************************************************************************************************
 void buscar(int codigo){
-    FILE *arquivo = fopen("Farmacia.txt","r+");
+    FILE *arquivo = fopen("Farmacia.txt","r+b");
     Farmacia f;
 
     int vamos_encontrar = 0;
@@ -57,7 +57,6 @@ void buscar(int codigo){
             printf("* Codigo: %d\n* Nome do remedio: %s\n",f.cod,f.nome_remedio);
             printf("* Quantidade em estoque: %d\n* Preco: %.2f\n",f.quant_estoque,f.preco);
             printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
-            printf("* Status: %c\n", f.status);
             printf("***********************************\n\n");
         }
     } else{
@@ -69,12 +68,12 @@ void buscar(int codigo){
 }
 //************************************************************************************************************************************************************************************************************
 void listar(){
-    FILE *arquivo = fopen("Farmacia.txt","r+");
+    FILE *arquivo = fopen("Farmacia.txt","r+b");
     Farmacia f;
     int encontrando_cadastros = 0;
 
     if(arquivo == NULL){
-        printf("Falha ao abrir arquivo!!!\n");
+        printf("O arquivo esta vazio!!!\n");
         system("pause");
         system("cls");
         return;
@@ -84,12 +83,11 @@ void listar(){
     printf("Remedios cadastrados\n\n");
 
     while(fread(&f, sizeof(Farmacia), 1, arquivo)){
-        if(f.status != '*'&& f.cod != -100){
+        if(f.status != '*'||f.cod != -100){
             printf("***********************************\n");
             printf("* Codigo: %d\n* Nome do remedio: %s\n",f.cod,f.nome_remedio);
             printf("* Quantidade em estoque: %d\n* Preco: %.2f\n",f.quant_estoque,f.preco);
             printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
-            printf("* Status: %c\n", f.status);
         }
     }
     printf("\n\n");
@@ -126,51 +124,57 @@ int alterar(Farmacia f,int codigo){
         printf("* Codigo: %d\n* Nome do remedio: %s\n",f.cod,f.nome_remedio);
         printf("* Quantidade em estoque: %d\n* Preco: %.2f\n",f.quant_estoque,f.preco);
         printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
-        printf("* Status: %c\n", f.status);
-        printf("***********************************\n\n");
+        f.status = '*';
+        f.cod = -100;
+        fseek(arquivo, -(long) sizeof(Farmacia), SEEK_CUR);
+        fwrite(&f, sizeof(Farmacia), 1, arquivo);
+        fflush(arquivo);
+        fclose(arquivo);
 
-        printf("Novo cadastro\n\n");
+    fopen("Farmacia.txt","a+b");
 
-        f.status = ' ';
-        printf("Codigo: ");
-        scanf("%d",&f.cod);
+        if(f.status == '*'){
+            printf("Novo cadastro\n\n");
 
-        fflush(stdin);
-        printf("Nome do remedio: ");
-        fgets(f.nome_remedio,100, stdin);
-        f.nome_remedio[strlen(f.nome_remedio)-1] = 0;
+            f.status = ' ';
+            printf("Codigo: ");
+            scanf("%d",&f.cod);
 
-        printf("Quantidade em estoque: ");
-        scanf("%i",&f.quant_estoque);
+            fflush(stdin);
+            printf("Nome do remedio: ");
+            fgets(f.nome_remedio,100, stdin);
+            f.nome_remedio[strlen(f.nome_remedio)-1] = 0;
 
-        printf("Preco: ");
-        scanf("%lf",&f.preco);
+            printf("Quantidade em estoque: ");
+            scanf("%i",&f.quant_estoque);
 
-        fflush(stdin);
-        printf("Fabricante: ");
-        fgets(f.fabricante,50, stdin);
-        f.fabricante[strlen(f.fabricante)-1] = 0;
+            printf("Preco: ");
+            scanf("%lf",&f.preco);
 
-        printf("Categoria: ");
-        fgets(f.categoria,50, stdin);
-        f.categoria[strlen(f.categoria)-1] = 0;
+            fflush(stdin);
+            printf("Fabricante: ");
+            fgets(f.fabricante,50, stdin);
+            f.fabricante[strlen(f.fabricante)-1] = 0;
 
-        printf("Generico (SIM) ou (NAO): ");
-        scanf("%[^\n]s",f.generico);
+            printf("Categoria: ");
+            fgets(f.categoria,50, stdin);
+            f.categoria[strlen(f.categoria)-1] = 0;
 
-        if(cadastrar(f)){
-            printf("\nItem inserido com sucesso!!!\n\n");
-            system("pause");
-            system("cls");
+            printf("Generico (SIM) ou (NAO): ");
+            scanf("%[^\n]s",f.generico);
+
+            if(cadastrar(f)){
+                printf("\nItem inserido com sucesso!!!\n\n");
+                system("pause");
+                system("cls");
+            }
         }
-
     }else{
         printf("Codigo nao encontrado!!!\n\n");
         system("pause");
         system("cls");
     }
-    fwrite(&f, sizeof(Farmacia), 1, arquivo);
-    fflush(arquivo);
+
     fclose(arquivo);
 }
 //************************************************************************************************************************************************************************************************************
@@ -202,15 +206,12 @@ int deletar(Farmacia f,int codigo){
         printf("* Codigo: %d\n* Nome do remedio: %s\n",f.cod,f.nome_remedio);
         printf("* Quantidade em estoque: %d\n* Preco: %.2f\n",f.quant_estoque,f.preco);
         printf("* Categoria: %s\n* Fabricante: %s\n* Generico: %s\n",f.categoria,f.fabricante,f.generico);
-        printf("* Status: %c\n", f.status);
         printf("***********************************\n\n");
 
         f.status = '*';
         f.cod = -100;
 
-        printf("Dados atuais do cadastro\n");
-        printf("* Status: %c\n", f.status);
-        printf("Apagando registro!\n");
+        printf("Registro apagado!!!\n");
         system("pause");
         system("cls");
 
@@ -226,7 +227,7 @@ int deletar(Farmacia f,int codigo){
 }
 //************************************************************************************************************************************************************************************************************
 void apagar_tudo(){
-    FILE *arquivo = fopen("Farmacia.txt","rb");
+    FILE *arquivo = fopen("Farmacia.txt","w+b");
 
     if(arquivo) {
         fclose(arquivo);
@@ -263,7 +264,25 @@ int main(){
     int codigo = 0;
     Farmacia f;
     do{
-        printf("Drogaria do Carrara\n");
+        printf("  ____                                          _         \n");
+        printf(" |  _ \\   _ __    ___     __ _    __ _   _ __  (_)   __ _ \n");
+        printf(" | | | | | '__|  / _ \\   / _` |  / _` | | '__| | |  / _` |\n");
+        printf(" | | | | | |    | ( ) | | / | | | / | | | |    | | | / | |\n");
+        printf(" | |_| | | |    | (_) | | \\_| | | \\_| | | |    | | | \\_| |\n");
+        printf(" |____/  |_|     \\___/   \\__, |  \\__,_| |_|    |_|  \\__,_|\n");
+        printf("                          |___/                            \n");
+        printf("\t                 _         \n");
+        printf("\t              __| |   ___  \n");
+        printf("\t             / _` |  / _ \\\n");
+        printf("\t            | / | | | ( ) |\n");
+        printf("\t            | \\_| | | (_) |\n");
+        printf("\t             \\__,_|  \\___/ \n");
+        printf("  ____                                              \n");
+        printf(" / ___|   __ _   _ __   _ __    __ _   _ __    __ _ \n");
+        printf("| |      / _` | | '__| | '__|  / _` | | '__|  / _` |\n");
+        printf("| |     | / | | | |    | |    | / | | | |    | / | |\n");
+        printf("| |___  | \\_| | | |    | |    | \\_| | | |    | \\_| |\n");
+        printf(" \\____|  \\__,_| |_|    |_|     \\__,_| |_|     \\__,_|\n\n\n");
         printf("1 - Cadastrar\n");
         printf("2 - Consultar\n");
         printf("3 - Alterar\n");
@@ -351,6 +370,12 @@ int main(){
 
             default:
                 if(op == 0){
+                    char imagem[9000];
+                    FILE *arq = fopen("imagem final.txt","r+b");
+                    while(fgets(imagem, 9000, arq) != NULL){
+                        printf("%s",imagem);
+                    }
+                    fclose(arq);
                     printf("\nEncerramos por aqui, ate amanha!!!\n\n");
                 }else{
                     printf("\nCodigo nao existente, digite outro!!!\n\n");
